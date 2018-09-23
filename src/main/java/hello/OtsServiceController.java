@@ -12,16 +12,15 @@ public class OtsServiceController {
 
     @PostMapping("/user/login")
     User newUser(@RequestBody User newUser) {
+
+        UserAuthentificator userAuthentificator = new UserAuthentificator();
+        userAuthentificator.checkUser("Falk");
         System.out.println(newUser);
         return newUser;
     }
 
-    @GetMapping("/user")
+    @GetMapping("/users")
     public User user(@RequestParam(value="name", defaultValue = "World") String name) {
-
-        UserAuthentificator userAuthentificator = new UserAuthentificator();
-        userAuthentificator.findUserId("Falk");
-        
         return new User(1,name, "1234");
     }
 

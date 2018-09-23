@@ -1,6 +1,6 @@
-hello\HelloController.class
 hello\OtsServiceController.class
+hello\GreetingController.class
+hello\HelloController.class
 hello\Application.class
 hello\User.class
 hello\Greeting.class
-hello\GreetingController.class

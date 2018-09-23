@@ -8,6 +8,10 @@ public class UserAuthentificator {
         private final String user = "postgres";
         private final String password = "mysecretpassword";
 
+        private String idResult;
+        private String nameResult;
+        private String passwordResult;
+
         private Connection connect() {
             Connection conn = null;
             try {
@@ -19,17 +23,29 @@ public class UserAuthentificator {
             return conn;
         }
 
-        public int findUserId(String uName) {
-            String SQL = "select * from _users WHERE username=" + uName;
+        public boolean checkUser(String uName) {
+            String SQL = "select * from _users WHERE username=" + "'" + uName + "'";
+            System.out.println(SQL);
            try(Connection conn = connect();
                Statement stmt = conn.createStatement();
                ResultSet rs = stmt.executeQuery(SQL)) {
-               System.out.println(rs);
+               rs.next();
+               idResult = rs.getString("uid");
+               nameResult = rs.getString("username");
+               passwordResult = rs.getString("password");
 
+                // DebugLOG
+               System.out.println(idResult);
+               System.out.println(nameResult);
+               System.out.println(passwordResult);
+               //
+
+
+               return true;
            } catch (SQLException ex) {
                System.out.println(ex.getMessage());
            }
-            return 3;
+            return false;
         }
 
     public static void main(String[] args) {
