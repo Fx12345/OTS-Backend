@@ -9,14 +9,34 @@ import usermanagement.UserAuthentificator;
 public class OtsServiceController {
 
     private final AtomicLong counter = new AtomicLong();
+    UserAuthentificator userAuthentificator = new UserAuthentificator();
 
     @PostMapping("/user/login")
-    User newUser(@RequestBody User newUser) {
+    User checkUser(@RequestBody User user) {
 
-        UserAuthentificator userAuthentificator = new UserAuthentificator();
-        userAuthentificator.checkUser("Falk");
-        System.out.println(newUser);
-        return newUser;
+      if(userAuthentificator.checkUser(user.getName(),  user.getPassword()) == 0) {
+          System.out.println("User checked");
+          return user;
+      }
+      if(userAuthentificator.checkUser(user.getName(),  user.getPassword()) == 1) {
+            return new User(-1,"wrong password", "-");
+      } else {
+          return new User(-2, "no User found", "-");
+      }
+    }
+
+    @PostMapping("/user/registration")
+    User registerUser (@RequestBody User newUser) {
+        if(userAuthentificator.checkUser(newUser.getName(),  newUser.getPassword()) == 2) {
+           if(userAuthentificator.addUser(newUser.getName(),newUser.getPassword()) != -1){
+               return newUser;
+           }
+           else {
+               return new User(-4, "Failed Database Create", "-");
+           }
+        } else {
+            return new User(-3, "Username is already used", "-");
+        }
     }
 
     @GetMapping("/users")

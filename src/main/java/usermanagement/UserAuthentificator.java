@@ -8,9 +8,9 @@ public class UserAuthentificator {
         private final String user = "postgres";
         private final String password = "mysecretpassword";
 
-        private String idResult;
-        private String nameResult;
-        private String passwordResult;
+//        private String idResult;
+//        private String nameResult;
+//        private String passwordResult;
 
         private Connection connect() {
             Connection conn = null;
@@ -23,30 +23,66 @@ public class UserAuthentificator {
             return conn;
         }
 
-        public boolean checkUser(String uName) {
+        private boolean checkPw(String pw, String passwordResult) {
+            if(pw.equals(passwordResult)){
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        public int checkUser(String uName,String uPw) {
             String SQL = "select * from _users WHERE username=" + "'" + uName + "'";
             System.out.println(SQL);
            try(Connection conn = connect();
                Statement stmt = conn.createStatement();
                ResultSet rs = stmt.executeQuery(SQL)) {
                rs.next();
-               idResult = rs.getString("uid");
-               nameResult = rs.getString("username");
-               passwordResult = rs.getString("password");
+
+               String idResult = rs.getString("uid");
+               String nameResult = rs.getString("username");
+               String passwordResult = rs.getString("password");
 
                 // DebugLOG
                System.out.println(idResult);
                System.out.println(nameResult);
                System.out.println(passwordResult);
                //
-
-
-               return true;
+                if(checkPw(uPw, passwordResult) == true) {
+                    return 0;
+                }
+               return 1;
            } catch (SQLException ex) {
-               System.out.println(ex.getMessage());
+              // System.out.println(ex.getMessage());
+               System.out.println("No User found");
+               return 2;
            }
-            return false;
         }
+
+        public long addUser(String name, String password) {
+            long id = 0;
+            String SQL = "insert INTO _users (username, password) VALUES ('" + name + "','" + password + "')";
+            System.out.println(SQL);
+            try(Connection conn = connect();
+                PreparedStatement pstmt = conn.prepareStatement(SQL, Statement.RETURN_GENERATED_KEYS))
+                 {
+                     int affectedRows = pstmt.executeUpdate();
+                     if(affectedRows > 0) {
+                         try(ResultSet rs = pstmt.getGeneratedKeys()) {
+                             if(rs.next()) {
+                                 id = rs.getLong(1);
+                             }
+                         }catch (SQLException ex) {
+                             System.out.println(ex.getMessage());
+                         }
+                     }
+            } catch (SQLException ex) {
+                System.out.println(ex.getMessage());
+                return -1;
+            }
+            return id;
+        }
+
 
     public static void main(String[] args) {
         UserAuthentificator userAuthentificator = new UserAuthentificator();
