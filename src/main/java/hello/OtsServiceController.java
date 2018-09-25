@@ -8,12 +8,12 @@ import usermanagement.UserAuthentificator;
 @RestController
 public class OtsServiceController {
 
-    private final AtomicLong counter = new AtomicLong();
-    UserAuthentificator userAuthentificator = new UserAuthentificator();
+  //  private final AtomicLong counter = new AtomicLong();
+   private UserAuthentificator userAuthentificator = new UserAuthentificator();
 
+    //Method for login Users
     @PostMapping("/user/login")
     User checkUser(@RequestBody User user) {
-
       if(userAuthentificator.checkUser(user.getName(),  user.getPassword()) == 0) {
           System.out.println("User checked");
           return user;
@@ -25,6 +25,7 @@ public class OtsServiceController {
       }
     }
 
+    //Method for register new Users
     @PostMapping("/user/registration")
     User registerUser (@RequestBody User newUser) {
         if(userAuthentificator.checkUser(newUser.getName(),  newUser.getPassword()) == 2) {
@@ -39,6 +40,16 @@ public class OtsServiceController {
         }
     }
 
+//    @GetMapping("/user/config_meta")
+//    @PostMapping("/user/config")
+//    @GetMapping("/game/state")
+//    @GetMapping("/game/entities")
+//    @PostMapping("/game/user_actions")
+//    @GetMapping("game/finished_state")
+    
+
+
+    //Test Method for checking JSON Syntax
     @GetMapping("/users")
     public User user(@RequestParam(value="name", defaultValue = "World") String name) {
         return new User(1,name, "1234");
