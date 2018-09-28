@@ -46,7 +46,7 @@ public class OtsServiceController {
 //    @GetMapping("/game/entities")
 //    @PostMapping("/game/user_actions")
 //    @GetMapping("game/finished_state")
-    
+
 
 
     //Test Method for checking JSON Syntax
