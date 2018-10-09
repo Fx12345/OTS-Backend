@@ -20,7 +20,7 @@ public class OtsServiceController {
 
     private List<Game> availableGames = new ArrayList<>();
 
-
+    //Get single Session
     private Session getSession(String session) {
         int sessionId = Integer.parseInt(session);
 
@@ -178,12 +178,12 @@ public class OtsServiceController {
 
 
 //    @PostMapping("/game/user_actions")
-<<<<<<< HEAD
+
 //    @GetMapping("game/finished_state")
 
-=======
+
 //    @GetMapping("/game/finished_state")
->>>>>>> 411d53f1ed548ee81090aa678240d172a92eb3d3
+
 
 
     //Test Method for checking JSON Syntax

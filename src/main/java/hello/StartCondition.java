@@ -1,7 +1,7 @@
 package hello;
 
 /**
- * Definiert die möglichen Startbedingungen
+ *Defines the possible start conditions
  */
 public enum StartCondition {
     Sheikh,

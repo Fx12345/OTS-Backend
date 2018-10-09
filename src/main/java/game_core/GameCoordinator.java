@@ -33,7 +33,7 @@ public class GameCoordinator {
             }
 
         } catch (SQLException ex) {
-
+            System.out.println("SQL Exception while reading territories drom db");
         }
 
         //TODO initialize empty structures
