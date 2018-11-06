@@ -1,15 +1,21 @@
 package hello;
 
 import game_core.GameCoordinator;
+import game_core.Player;
+import game_core.Territory;
 import org.springframework.web.bind.annotation.*;
 import user_management.UserAuthentificator;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+//Todo fetch Cross Origin to server address
+//@CrossOrigin(origins = "http://localhost:8082")
+@CrossOrigin
 @RestController
 public class OtsServiceController {
 
@@ -33,19 +39,18 @@ public class OtsServiceController {
         return null;
     }
 
+    //----------------------------------------------------------------------------------------User Management---------------------------------------------------------------
     //Method for login Users
     @PostMapping("/user/login")
     User checkUser(@RequestBody User user, HttpServletResponse response) {
         if (userAuthentificator.checkUser(user.getName(), user.getPassword()) == 0) {
-            //System.out.println("User checked");
-            user.setPassword("");
             Session s = new Session(sessionIdGenerator.nextInt(), user);
-
             activeSessions.add(s);
-            Cookie cookie = new Cookie("session", Integer.toString(s.getId()));
+        /**    Cookie cookie = new Cookie("session", Integer.toString(s.getId()));
+          //  cookie.setDomain("localhost");
             cookie.setPath("/");
-            response.addCookie(cookie);
-
+            response.addCookie(cookie); **/
+            user.setPassword(Integer.toString(s.getId()));
             return user;
         }
         if (userAuthentificator.checkUser(user.getName(), user.getPassword()) == 1) {
@@ -56,15 +61,17 @@ public class OtsServiceController {
     }
 
     @GetMapping("/user/logout")
-    void logoutUser(@CookieValue(name = "session", defaultValue = "-1") String session) {
+    Session logoutUser(@RequestHeader(value = "session", defaultValue = "-1") String session) {
         int sessionId = Integer.parseInt(session);
 
         for(Session s : activeSessions) {
             if(s.getId() == sessionId){
                 activeSessions.remove(s);
-                break;
+                return s;
+                //break;
             }
         }
+        return null;
     }
 
     //Method for register new Users
@@ -73,13 +80,14 @@ public class OtsServiceController {
         if (userAuthentificator.checkUser(newUser.getName(), newUser.getPassword()) == 2) {
             if (userAuthentificator.addUser(newUser.getName(), newUser.getPassword()) != -1) {
                 Session s = new Session(sessionIdGenerator.nextInt(), newUser);
-                newUser.setPassword("");
-
+                newUser.setPassword(Integer.toString(s.getId()));
                 activeSessions.add(s);
+                /**
                 Cookie cookie = new Cookie("session", Integer.toString(s.getId()));
+                cookie.setDomain(null);
                 cookie.setPath("/");
                 response.addCookie(cookie);
-
+**/
                 return newUser;
             } else {
                 return new User(-4, "Failed Database Create", "-");
@@ -89,16 +97,23 @@ public class OtsServiceController {
         }
     }
 
+    @GetMapping("/user/name")
+    String getUsername(@RequestHeader(value = "session", defaultValue = "-1") String session) {
+        Session s = getSession(session);
+        return s.getUser().getName();
+    }
 
+//----------------------------------------------------------------------------------------User Game Config---------------------------------------------------------------
+    //getGames
     @GetMapping("/user/config_meta")
-    UserConfigMetadata getUserConfigMeta(@CookieValue(name = "session", defaultValue = "-1") String session) {
+    UserConfigMetadata getUserConfigMeta(@RequestHeader(value = "session", defaultValue = "-1") String session) {
         Session s = getSession(session);
 
-        if(s == null ||s.getCurrentGame() != null) return null;
+        if(s == null ||s.getCurrentGame() != null) return new UserConfigMetadata();
 
         List<Game> joinableGames = new ArrayList<>();
         for(Game g : availableGames) {
-            if(g.getState() == Game.State.New)
+            if(g.getState() == Game.State.New && g.countJoinedUsers() < 4 && g.countJoinedUsers() > 0)
                 joinableGames.add(g);
         }
 
@@ -109,11 +124,11 @@ public class OtsServiceController {
         return ucm;
     }
 
+    //add or join Game
     @PostMapping("/user/config")
-    void setUserConfig(@CookieValue(name = "session", defaultValue = "-1") String session, @RequestBody UserConfig userConfig) {
+    String setUserConfig(@RequestHeader(value = "session", defaultValue = "-1") String session, @RequestBody UserConfig userConfig) {
         Session s = getSession(session);
-
-        if(s == null ||s.getCurrentGame() != null) return;
+        if(s == null ||s.getCurrentGame() != null) return "ERROR - No Session or already in game";
 
         Game game = null;
         for(Game g : availableGames) {
@@ -134,11 +149,21 @@ public class OtsServiceController {
 
         game.joinUser(s.getUser(), userConfig.getStartCondition());
         s.setCurrentGame(game);
+        return "game was set - " + game.countJoinedUsers();
+    }
+    //leave Game
+    @GetMapping("/user/leaveGame")
+    String leaveGame(@RequestHeader(value = "session", defaultValue = "-1") String session) {
+        Session s = getSession(session);
+        Game game = s.getCurrentGame();
+        game.leaveUser(s.getUser());
+        s.setCurrentGame(null);
+        return "user left game";
     }
 
-
+    //----------------------------------------------------------------------------------------Game Setup---------------------------------------------------------------
     @GetMapping("/game/state")
-    Game getGameState(@CookieValue(name = "session", defaultValue = "-1") String session) {
+    Game getGameState(@RequestHeader(value = "session", defaultValue = "-1") String session) {
         Session s = getSession(session);
 
         if(s == null ||s.getCurrentGame() == null) return null;
@@ -148,7 +173,7 @@ public class OtsServiceController {
     }
 
     @PostMapping("/game/start")
-    Game startGame(@CookieValue(name = "session", defaultValue = "-1") String session) {
+    Game startGame(@RequestHeader(value = "session", defaultValue = "-1") String session) {
         Session s = getSession(session);
 
         if(s == null || s.getCurrentGame() == null || s.getCurrentGame().getState() != Game.State.New) return null;
@@ -164,29 +189,48 @@ public class OtsServiceController {
     }
 
     @GetMapping("/game/entities")
-    EntityCollection getEntities(@CookieValue(name = "session", defaultValue = "-1") String session) {
+    EntityCollection getEntities(@RequestHeader(value = "session", defaultValue = "-1") String session) {
         Session s = getSession(session);
 
         if(s == null || s.getCurrentGame() == null || s.getCurrentGame().getState() == Game.State.New) return null;
 
 
-        EntityCollection entities = new EntityCollection(s.getCurrentGame().getCoordinator().getTerritoryList());
+        EntityCollection entities = new EntityCollection(s.getCurrentGame().getCoordinator().getTerritoryList(), s.getCurrentGame().getCoordinator().getPlayers());
 
 
         return entities;
     }
 
+//----------------------------------------------------------------------------------------------------Run Game--------------------------------------------------------
 
-//    @PostMapping("/game/user_actions")
+    @PostMapping("/game/action")
+    String userAction(@RequestHeader(value = "session", defaultValue = "-1") String session, @RequestBody ActionEntity actionEntity) {
+        Session s = getSession(session);
+        GameCoordinator gc = s.getCurrentGame().getCoordinator();
+        Player pl = s.getCurrentGame().getCoordinator().getPlayers().stream().filter(p -> p.getId().equals(Integer.toString(s.getUser().getId()))).findFirst().orElse(null);
+        gc.updateMap(actionEntity, pl);
+        return "executed";
+    }
 
-//    @GetMapping("game/finished_state")
+    @PostMapping("/game/round_finished")
+    String roundFinished(@RequestHeader(value = "session", defaultValue = "-1") String session) {
+        Session s = getSession(session);
+
+        GameCoordinator gc = s.getCurrentGame().getCoordinator();
+        Player pl = s.getCurrentGame().getCoordinator().getPlayers().stream().filter(p -> p.getName().equals(s.getUser().getName())).findFirst().orElse(null);
+        gc.setPlayerRoundFinished(pl);
+        return "executed";
+    }
+
 
 
 //    @GetMapping("/game/finished_state")
 
 
 
-    //Test Method for checking JSON Syntax
+
+    //------------------------------------------------------------------------------------Test Method for checking JSON Syntax--------------------------------------
+
     @GetMapping("/users")
     public User user(@RequestParam(value = "name", defaultValue = "World") String name) {
         return new User(1, name, "1234");

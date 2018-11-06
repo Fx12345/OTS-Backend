@@ -4,5 +4,8 @@ public enum KeyFigureType {
     Currency,
     Oil,
     Fuel,
-    Worker
+    Worker,
+    Percentage,
+    Distance,
+    Number
 }

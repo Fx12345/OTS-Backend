@@ -5,7 +5,7 @@ import hello.User;
 
 public abstract class Structure {
 
-    private int id;
+    protected int id;
 
     private Point coordinates;
 
@@ -13,16 +13,24 @@ public abstract class Structure {
 
     private double oilCapacity;
 
+    private String type;
 
     private Territory territory;
 
-    private User owner;
+    private Player owner;
 
 
-    public Structure() {
+    public Structure() {}
 
+    public Structure(int id, Point coordinates, boolean visible, double oilCapacity, Territory territory,Player owner, String type) {
+        this.id = id;
+        this.coordinates = coordinates;
+        this.visible = visible;
+        this.oilCapacity = oilCapacity;
+        this.territory = territory;
+        this.owner = owner;
+        this.type = type;
     }
-
 
     @JsonGetter("territory")
     public String getTerritoryId() {
@@ -33,6 +41,7 @@ public abstract class Structure {
     public String getOwnerId() {
         return owner.getName();
     }
+
 
     public int getId() {
         return id;
@@ -52,5 +61,13 @@ public abstract class Structure {
 
     public double getOilCapacity() {
         return oilCapacity;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

@@ -35,5 +35,8 @@ public class KeyFigure {
         this.type = type;
     }
 
+    public void incrementValue(){
+        value +=1;
+    }
 
 }

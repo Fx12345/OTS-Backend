@@ -39,9 +39,9 @@ public class UserAuthentificator {
             String passwordResult = rs.getString("password");
 
             // DebugLOG
-            /*System.out.println(idResult);
+            System.out.println(idResult);
             System.out.println(nameResult);
-            System.out.println(passwordResult);*/
+            System.out.println(passwordResult);
             //
             if (checkPw(uPw, passwordResult)) {
                 return 0;
